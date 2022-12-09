@@ -74,3 +74,17 @@ def prototype_learning(configer, prototypes, _c, out_seg, gt_seg, update_prototy
     #     rearrange_logit[:, i::num_prototype] = proto_logits[:, i*num_unify_classes:(i+1)*num_unify_classes]
 
     return proto_logits, proto_target, protos
+
+
+def KmeansProtoLearning(configer, memory_banks, _c, out_seg, gt_seg, init=False):
+    num_unify_classes = configer.get('num_unify_classes')
+    num_prototype = configer.get('contrast', 'num_prototype')
+    coefficient = configer.get('contrast', 'coefficient')
+    network_stride = configer.get('network', 'stride')
+    if init == True:
+        for i in range(0, num_unify_classes):
+            if not (gt_seg==int(i)).any():
+                continue
+            
+            else:
+                pass
