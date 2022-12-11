@@ -1,6 +1,10 @@
+import sys
+sys.path.insert(0, 'D:/Study/code/BiSeNet')
+
 from lib.sinkhorn import distributed_sinkhorn
 from lib.momentum_update import momentum_update
 from timm.models.layers import trunc_normal_
+from lib.module.kmeans import kmeans
 from einops import rearrange, repeat
 
 import torch
@@ -76,15 +80,43 @@ def prototype_learning(configer, prototypes, _c, out_seg, gt_seg, update_prototy
     return proto_logits, proto_target, protos
 
 
-def KmeansProtoLearning(configer, memory_banks, _c, out_seg, gt_seg, init=False):
+def KmeansProtoLearning(configer, memory_bank, memory_bank_ptr, _c, cluster_seg, gt_seg):
     num_unify_classes = configer.get('num_unify_classes')
     num_prototype = configer.get('contrast', 'num_prototype')
     coefficient = configer.get('contrast', 'coefficient')
     network_stride = configer.get('network', 'stride')
-    if init == True:
-        for i in range(0, num_unify_classes):
-            if not (gt_seg==int(i)).any():
-                continue
-            
-            else:
-                pass
+                
+    cluster_centers = torch.mean(memory_bank, dim=1)
+    choice_cluster, initial_state = kmeans(_c[cluster_seg], num_unify_classes, cluster_centers=cluster_centers, distance='cosine', device='cpu', memory_bank=memory_bank, constraint_matrix=gt_seg)
+    return choice_cluster, initial_state
+    
+    
+if __name__ == '__main__':
+    
+
+    from tools.configer import Configer
+    configer = Configer(configs='configs/test_kmeans.json')
+    memory_bank = torch.tensor([[[1,1],
+                                 [2,2]],
+                                [[-1,1],
+                                 [-2,1]],
+                                [[0,-1],
+                                 [1,-2]]], dtype=torch.float)
+    memory_bank_ptr = torch.tensor([0,0,0])
+    _c = torch.tensor([[0,0],
+                       [1,2],
+                       [-1,2],
+                       [-1,-2],
+                       [1,1],
+                       [1,1]], dtype=torch.float)
+    cluster_seg = torch.ones(6, dtype=torch.bool)
+    gt_seg = torch.tensor([[1,1,1],
+                            [1,1,1],
+                            [1,1,1],
+                            [1,1,1],
+                            [0,1,1],
+                            [1,0,1]], dtype=torch.bool).logical_not()
+    choice_cluster, initial_state = KmeansProtoLearning(configer, memory_bank, memory_bank_ptr, _c, cluster_seg, gt_seg)
+    print(choice_cluster)
+    print(initial_state)
+    

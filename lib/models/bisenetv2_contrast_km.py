@@ -396,7 +396,7 @@ class SegmentHead(nn.Module):
         return feats
 
 
-class BiSeNetV2_Contrast(nn.Module):
+class bisenetv2_contrast_km(nn.Module):
 
     def __init__(self, configer):
         super(BiSeNetV2_Contrast, self).__init__()

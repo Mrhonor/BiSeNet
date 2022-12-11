@@ -1,5 +1,5 @@
 {
-    "model_name": "bisenetv2_contrast",
+    "model_name": "bisenetv2_contrast_km",
     "aux_mode": "train",
     "n_datasets": 2,
     "num_unify_classes": 19,
@@ -115,7 +115,7 @@
       "max_samples": 4096,
       "max_views": 24,
       "loss_weight": 1,
-      "num_prototype": 3,
+      "num_prototype": 500,
       "coefficient": 0.99,
       "upsample": false,
       "downsample": false,

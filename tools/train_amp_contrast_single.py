@@ -395,10 +395,10 @@ def train():
                     adaptive_out[k] = v[0]
 
             if is_distributed():
-                adaptive_out['prototypes'] = net.module.prototypes
+                adaptive_out['memory_bank'] = [net.module.memory_bank, net.module.memory_bank_ptr]
             
             else:
-                adaptive_out['prototypes'] = net.prototypes
+                adaptive_out['memory_bank'] = [net.memory_bank, net.module.memory_bank_ptr]
                 
                 
 
@@ -408,13 +408,17 @@ def train():
             else:
                 is_warmup = False
                 
-                
-            backward_loss, loss_seg, loss_aux, loss_contrast, loss_domain, new_proto = contrast_losses(adaptive_out, lb, dataset_lbs, is_warmup)
 
-        if is_distributed():
-            net.module.PrototypesUpdate(new_proto)
-        else:
-            net.PrototypesUpdate(new_proto)        
+            if epoch < 1:
+                contrast_losses(adaptive_out, lb, dataset_lbs, is_warmup, init_memory_bank=True)
+                continue
+            else:
+                backward_loss, loss_seg, loss_aux, loss_contrast, loss_domain, new_proto = contrast_losses(adaptive_out, lb, dataset_lbs, is_warmup)
+
+        # if is_distributed():
+        #     net.module.PrototypesUpdate(new_proto)
+        # else:
+        #     net.PrototypesUpdate(new_proto)        
         
             
         # if with_memory and 'key' in out:

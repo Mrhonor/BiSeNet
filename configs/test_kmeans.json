@@ -1,0 +1,102 @@
+{
+    "model_name": "bisenetv2_contrast",
+    "aux_mode": "train",
+    "n_datasets": 2,
+    "num_unify_classes": 3,
+    "dataset1": {
+      "n_cats": 18,
+      "data_reader": "CityScapes",
+      "im_root": "/home/cxh/datasets/",
+      "train_im_anns":"datasets/Cityscapes/train.txt",
+      "val_im_anns":"datasets/Cityscapes/train.txt", 
+      "ims_per_gpu": 1,
+      "eval_ims_per_gpu": 1
+
+    },
+    "dataset2": {
+      "n_cats": 12, 
+      "data_reader": "CamVid",
+      "im_root": "/home/cxh/datasets/CamVid",
+      "train_im_anns":"datasets/CamVid/train.txt",
+      "val_im_anns":"datasets/CamVid/train.txt", 
+      "ims_per_gpu": 1,
+      "eval_ims_per_gpu": 1
+    },
+    "n_bn": 1,
+    "class_remap1":{
+      "0": [0], 
+      "1": [1],
+      "2": [2, 3]
+    }, 
+    "class_remap2":{ 
+      "0": [3],
+      "1": [2],
+      "2": [1],
+      "3": [0]
+    },
+    "class_weight":{
+      "0": 1, 
+      "1": 1,
+      "2": 1, 
+      "3": 1.0
+    },
+    "class_remaper": "ClassRemapOneHotLabel",
+    "loss":{
+      "type": "MultiLabelCrossEntropyLoss",
+      "with_aux": true,
+      "aux_weight": 0.4,
+      "aux_num": 4,
+      "ignore_index": 255,
+      "domain_loss_weight": 0.1,
+      "m": 0,
+      "gamma": 12
+    },
+    "lr": {
+      "lr_start": 1e-2,
+      "weight_decay": 4e-5,
+      "warmup_iters": 0,
+      "max_iter": 100000
+    },
+    "train": {
+      "scales": [1.0],
+      "cropsize": [512, 1024],
+      "finetune": false,
+      "finetune_from": "res/model_16000.pth"
+    },
+    "val": {
+      "scales": [0.5, 0.75, 1.0, 1.25, 1.5, 1.75],
+      "cropsize": [512, 1024]
+    },
+    "use_fp16": false,
+    "use_sync_bn": false,
+    "contrast": {
+      "use_contrast": true,
+      "proj_dim": 128,
+      "temperature": 0.7,
+      "base_temperature": 0.07,
+      "max_samples": 4096,
+      "max_views": 1000,
+      "stride": 8,
+      "loss_weight": 0.3,
+      "num_prototype": 2,
+      "coefficient": 0.99,
+      "upsample": false,
+      "update_confidence_thresh": 0.2,
+      "update_sim_thresh": 0.5,
+      "with_ppd": false,
+      "ppd_loss_weight": 1,
+      "with_hard_lb_contrast": true,
+      "hard_lb_contrast_loss_weight": 1
+    },
+    "res_save_pth": "res/nll_loss/",
+    "network": {
+      "stride": 2,
+      "with_domain_adversarial": true
+    },
+    "dataset_aux_head": {
+      "use_dataset_aux_head": false,
+      "aux_iter": 10000
+    },
+    "optim": "AdamW",
+    "iter": 0
+}

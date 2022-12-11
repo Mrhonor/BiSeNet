@@ -9,7 +9,7 @@ import torch.nn.functional as F
 
 class OhemCELoss(nn.Module):
 
-    def __init__(self, thresh, ignore_lb=255):
+    def __init__(self, thresh, ignore_lb=-1):
         super(OhemCELoss, self).__init__()
         self.thresh = -torch.log(torch.tensor(thresh, requires_grad=False, dtype=torch.float)).cuda()
         self.ignore_lb = ignore_lb

@@ -498,7 +498,63 @@ class ClassRemapOneHotLabel(ClassRemap):
           
         return contrast_lb_mask, seg_mask
     
+    def KMeansRemapping(self, labels, dataset_id):
+        ## 只输出 唯一映射部分
+        ## dataset_id指定映射方案
+        outLabels = []
         
+        cluster_mask = torch.zeros_like(labels).bool() 
+        constraint_mask = torch.zeros((*(labels.shape), self.num_unify_classes), dtype=torch.bool)
+        if labels.is_cuda:
+            constraint_mask = constraint_mask.cuda()
+        
+        for k, v in self.remapList[dataset_id].items():
+            if len(v) > 1: 
+                expend_vector = torch.zeros(self.num_unify_classes, dtype=torch.bool)
+                if labels.is_cuda:
+                    expend_vector = expend_vector.cuda()
+
+                expend_vector[v] = True
+                cluster_mask[labels==int(k)] = True
+                constraint_mask[labels==int(k)] = expend_vector         
+            
+        return cluster_mask, constraint_mask
+    
+    def UpsampleProtoTarget(self, labels, proto_target, dataset_id):
+        
+        B, H, W = labels.shape
+        
+        # proto_target = proto_target.permute(0, 3, 1, 2)
+        seg_mask = F.interpolate(proto_target.squeeze(1).float(), size=(H,W), mode='nearest').squeeze(1)
+        # seg_mask = seg_mask.permute(0, 2, 3, 1)
+
+        zero_vector = torch.zeros(self.num_unify_classes, dtype=torch.bool)
+        if seg_mask.is_cuda:
+            zero_vector = zero_vector.cuda()
+        
+        for k, v in self.remapList[dataset_id].items():
+            # 判断是否为空
+            if not (labels==int(k)).any():
+                continue
+            
+            
+            if len(v) == 1: 
+                seg_mask[labels==int(k)] = v[0]
+                
+                # if int(k) == 3:
+                #     print(dataset_id)
+                #     print(seg_vector)
+            else:
+
+                seg_mask[labels==int(k)] = self.ignore_index
+
+        seg_mask[labels==self.ignore_index] = self.ignore_index
+        # seg_mask[seg_mask==self.ignore_index] = 0
+        
+        # if is_emb_upsampled:
+        #     weight_mask = self.Upsample(weight_mask.permute(0,3,1,2)).permute(0,2,3,1)
+          
+        return seg_mask
     
 def test_ContrastRemapping():
     configer = Configer(configs='configs/test.json')

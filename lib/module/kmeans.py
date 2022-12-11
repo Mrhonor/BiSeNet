@@ -32,9 +32,10 @@ def kmeans(
         tol=1e-4,
         tqdm_flag=False,
         iter_limit=0,
-        device=torch.device('cpu'),
+        device='cpu',
         gamma_for_soft_dtw=0.001,
         memory_bank=None,
+        constraint_matrix=None,
         rand_seed=None,
 ):
     """
@@ -67,7 +68,7 @@ def kmeans(
     X = X.float()
 
     # transfer to device
-    X = X.to(device)
+    # X = X.to(device)
 
     # initialize
     if type(cluster_centers) == list:  # ToDo: make this less annoyingly weird
@@ -80,7 +81,7 @@ def kmeans(
         dis = pairwise_distance_function(X, initial_state)
         choice_points = torch.argmin(dis, dim=0)
         initial_state = X[choice_points]
-        initial_state = initial_state.to(device)
+        # initial_state = initial_state.to(device)
 
     iteration = 0
     if tqdm_flag:
@@ -89,15 +90,21 @@ def kmeans(
 
         dis = pairwise_distance_function(X, initial_state)
 
+        dis[constraint_matrix] = 1e5 # use large value to avoid choice it
+
         choice_cluster = torch.argmin(dis, dim=1)
 
         initial_state_pre = initial_state.clone()
-
+        
         for index in range(num_clusters):
-            selected = torch.nonzero(choice_cluster == index).squeeze().to(device)
+            selected = torch.nonzero(choice_cluster == index).squeeze() # .to(device)
+            
+            if choice_cluster.is_cuda:
+                selected = selected.cuda()
 
             selected = torch.index_select(X, 0, selected)
-            selected = torch.cat((selected, memory_bank[index]), dim=1)
+            selected = torch.cat((selected, memory_bank[index]), dim=0)
+
             # https://github.com/subhadarship/kmeans_pytorch/issues/16
             if selected.shape[0] == 0:
                 selected = X[torch.randint(len(X), (1,))]
@@ -125,7 +132,7 @@ def kmeans(
         if iter_limit != 0 and iteration >= iter_limit:
             break
 
-    return choice_cluster.cpu(), initial_state.cpu()
+    return choice_cluster, initial_state
 
 
 def kmeans_predict(
@@ -170,12 +177,14 @@ def kmeans_predict(
     return choice_cluster.cpu()
 
 
-def pairwise_distance(data1, data2, device=torch.device('cpu'), tqdm_flag=True):
+def pairwise_distance(data1, data2, device='cpu', tqdm_flag=True):
     if tqdm_flag:
         print(f'device is :{device}')
     
+
     # transfer to device
-    data1, data2 = data1.to(device), data2.to(device)
+    if device == 'cuda':
+        data1, data2 = data1.cuda(), data2.cuda()
 
     # N*1*M
     A = data1.unsqueeze(dim=1)
@@ -189,9 +198,10 @@ def pairwise_distance(data1, data2, device=torch.device('cpu'), tqdm_flag=True):
     return dis
 
 
-def pairwise_cosine(data1, data2, device=torch.device('cpu')):
+def pairwise_cosine(data1, data2, device='cpu'):
     # transfer to device
-    data1, data2 = data1.to(device), data2.to(device)
+    if device == 'cuda':
+        data1, data2 = data1.cuda(), data2.cuda()
 
     # N*1*M
     A = data1.unsqueeze(dim=1)
@@ -210,12 +220,13 @@ def pairwise_cosine(data1, data2, device=torch.device('cpu')):
     return cosine_dis
 
 
-def pairwise_soft_dtw(data1, data2, sdtw=None, device=torch.device('cpu')):
+def pairwise_soft_dtw(data1, data2, sdtw=None, device='cpu'):
     if sdtw is None:
         raise ValueError('sdtw is None - initialize it with SoftDTW')
 
     # transfer to device
-    data1, data2 = data1.to(device), data2.to(device)
+    if device == 'cuda':
+        data1, data2 = data1.cuda(), data2.cuda()
 
     # (batch_size, seq_len, feature_dim=1)
     A = data1.unsqueeze(dim=2)
