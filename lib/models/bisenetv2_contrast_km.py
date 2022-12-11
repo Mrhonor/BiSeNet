@@ -396,10 +396,10 @@ class SegmentHead(nn.Module):
         return feats
 
 
-class bisenetv2_contrast_km(nn.Module):
+class BiSeNetV2_Contrast_KM(nn.Module):
 
     def __init__(self, configer):
-        super(BiSeNetV2_Contrast, self).__init__()
+        super(BiSeNetV2_Contrast_KM, self).__init__()
         self.configer = configer
         self.aux_mode = self.configer.get('aux_mode')
         self.num_unify_classes = self.configer.get("num_unify_classes")
