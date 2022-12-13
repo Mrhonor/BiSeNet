@@ -18,7 +18,7 @@
       "im_root": "/home/cxh/datasets/CamVid",
       "train_im_anns":"datasets/CamVid/train.txt",
       "val_im_anns":"datasets/CamVid/test.txt", 
-      "ims_per_gpu": 6,
+      "ims_per_gpu": 2,
       "eval_ims_per_gpu": 2
     },
     "n_bn": 2,
@@ -129,7 +129,7 @@
     "res_save_pth": "res/Mds/",
     "network": {
       "stride": 32,
-      "with_domain_adversarial": false
+      "with_domain_adversarial": true
     },
     "dataset_aux_head": {
       "use_dataset_aux_head": false,

@@ -80,14 +80,18 @@ def prototype_learning(configer, prototypes, _c, out_seg, gt_seg, update_prototy
     return proto_logits, proto_target, protos
 
 
-def KmeansProtoLearning(configer, memory_bank, memory_bank_ptr, _c, cluster_seg, gt_seg):
+def KmeansProtoLearning(configer, memory_bank, _c, cluster_seg, gt_seg):
     num_unify_classes = configer.get('num_unify_classes')
     num_prototype = configer.get('contrast', 'num_prototype')
     coefficient = configer.get('contrast', 'coefficient')
     network_stride = configer.get('network', 'stride')
                 
     cluster_centers = torch.mean(memory_bank, dim=1)
-    choice_cluster, initial_state = kmeans(_c[cluster_seg], num_unify_classes, cluster_centers=cluster_centers, distance='cosine', device='cpu', memory_bank=memory_bank, constraint_matrix=gt_seg)
+    target_device = 'cpu'
+    if memory_bank.is_cuda:
+        target_device = 'cuda'
+        
+    choice_cluster, initial_state = kmeans(_c[cluster_seg], num_unify_classes, cluster_centers=cluster_centers, distance='cosine', device=target_device, memory_bank=memory_bank, constraint_matrix=gt_seg)
     return choice_cluster, initial_state
     
     

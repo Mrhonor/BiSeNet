@@ -525,7 +525,7 @@ class ClassRemapOneHotLabel(ClassRemap):
         B, H, W = labels.shape
         
         # proto_target = proto_target.permute(0, 3, 1, 2)
-        seg_mask = F.interpolate(proto_target.squeeze(1).float(), size=(H,W), mode='nearest').squeeze(1)
+        seg_mask = F.interpolate(proto_target.unsqueeze(1).float(), size=(H,W), mode='nearest').squeeze(1).long()
         # seg_mask = seg_mask.permute(0, 2, 3, 1)
 
         zero_vector = torch.zeros(self.num_unify_classes, dtype=torch.bool)

@@ -488,11 +488,11 @@ class BiSeNetV2_Contrast_KM(nn.Module):
             self.aux5_4 = SegmentHead(128, 128, self.num_unify_classes, up_factor=32, aux=True, n_bn=self.n_bn)
 
             
-        
+
         self.init_memory_bank = True    
-        self.memory_bank = nn.Parameter(torch.zeros(self.num_unify_classes, self.num_pixels, self.proj_dim),
+        self.memory_bank = nn.Parameter(torch.zeros(self.num_unify_classes, self.num_prototype, self.proj_dim),
                                        requires_grad=False)
-        self.prototypes = self.memory_bank
+        # self.prototypes = self.memory_bank
         self.memory_bank_ptr = torch.zeros(self.num_unify_classes)
         # trunc_normal_(self.prototypes, std=0.02)
         self.init_weights()
@@ -763,7 +763,7 @@ class BiSeNetV2_Contrast_KM(nn.Module):
                     nowd_params.append(param)
                     # print(param.dim())
                     # print(param)
-                    print(name)
+                    # print(name)
 
         wd_params, nowd_params, lr_mul_wd_params, lr_mul_nowd_params = [], [], [], []
         for name, child in self.named_children():

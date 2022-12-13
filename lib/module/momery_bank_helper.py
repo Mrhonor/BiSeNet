@@ -1,4 +1,4 @@
-
+import torch
 
 def memory_bank_push(configer, memory_bank, memory_bank_ptr, _c, gt_seg):
     num_unify_classes = configer.get('num_unify_classes')
@@ -16,7 +16,7 @@ def memory_bank_push(configer, memory_bank, memory_bank_ptr, _c, gt_seg):
             perm = torch.randperm(num_pixel)
             K = min(num_pixel, num_prototype)
             
-            feat = this_feat[perm[:k], :]
+            feat = this_feat[perm[:K], :]
             
             ptr = int(memory_bank_ptr[i])
 

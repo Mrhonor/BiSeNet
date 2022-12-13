@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from lib.class_remap import ClassRemap, ClassRemapOneHotLabel
-from lib.prototype_learning import prototype_learning
+from lib.prototype_learning import prototype_learning, KmeansProtoLearning
 from lib.module.momery_bank_helper import memory_bank_push
 from lib.ohem_ce_loss import OhemCELoss
 from einops import rearrange, repeat
@@ -119,7 +119,7 @@ class CrossDatasetsLoss(nn.Module):
                 ## n: num of class; k: num of prototype per class
                 ## proto_logits: (b h_c w_c) * (nk) 每个通道输出分别与prototype的内积
                 ## proto_target: 每个通道输出所分配到的prototype的index
-                choice_cluster, initial_state = KmeansProtoLearning(configer, memory_bank, memory_bank_ptr, rearr_emb, cluster_mask, constraint_mask)
+                choice_cluster, initial_state = KmeansProtoLearning(self.configer, memory_bank, rearr_emb, cluster_mask, constraint_mask)
                 
                 proto_mask[cluster_mask] = choice_cluster
                 proto_target = proto_mask         
@@ -155,10 +155,12 @@ class CrossDatasetsLoss(nn.Module):
                 
         else:
 
-            seg_mask_mul = self.AdaptiveUpsampleProtoTarget(lb, proto_logits, dataset_ids)
+            seg_mask_mul = self.AdaptiveUpsampleProtoTarget(lb, proto_target, dataset_ids)
             segment_queue = torch.mean(memory_bank, dim=1)
-            predict = argmin(logits, dim=1)
-            loss_contrast = self.contrast_criterion(embedding, proto_target, predict, segment_queue)
+            predict = torch.argmin(logits, dim=1)
+            predict = predict[:, ::self.network_stride, ::self.network_stride]
+            re_proto_target = rearrange(proto_target, '(b h w) -> b h w', b=lb.shape[0], h=int(lb.shape[1]/self.network_stride), w=int(lb.shape[2]/self.network_stride))
+            loss_contrast = self.contrast_criterion(embedding, re_proto_target, predict, segment_queue)
             
             # loss_contrast = self.hard_lb_contrast_loss(proto_logits, contrast_mask_label+proto_targetOntHot)
             
@@ -250,7 +252,7 @@ class CrossDatasetsLoss(nn.Module):
         
     def AdaptiveKMeansRemapping(self, lb, dataset_ids):
         cluster_mask = torch.zeros_like(lb).bool()
-        constraint_mask = torch.zeros((*(labels.shape), self.num_unify_classes), dtype=torch.bool)
+        constraint_mask = torch.zeros((*(lb.shape), self.num_unify_classes), dtype=torch.bool)
         if lb.is_cuda:
             constraint_mask = constraint_mask.cuda()
 
@@ -260,12 +262,14 @@ class CrossDatasetsLoss(nn.Module):
             
             cluster_mask[dataset_ids==i], constraint_mask[dataset_ids==i] = self.classRemapper.KMeansRemapping(lb[dataset_ids==i], i)
         
+        out_constrain_mask =  constraint_mask[cluster_mask]
         cluster_mask = cluster_mask.contiguous().view(-1)
-        return cluster_mask, constraint_mask[cluster_mask]
+        
+        return cluster_mask, out_constrain_mask
     
     def AdaptiveUpsampleProtoTarget(self, lb, proto_target, dataset_ids):
         # b, h, w = lb.shape
-        seg_mask_mul = torch.ones_like(lb) * self.ign
+        seg_mask_mul = torch.ones_like(lb) * self.ignore_index
         
         if lb.is_cuda:
             seg_mask_mul = seg_mask_mul.cuda()
@@ -275,7 +279,7 @@ class CrossDatasetsLoss(nn.Module):
                 continue
             re_proto_target = rearrange(proto_target, '(b h w) -> b h w', b=lb.shape[0], h=int(lb.shape[1]/self.network_stride), w=int(lb.shape[2]/self.network_stride))
             # this_proto_target = rearrange(re_proto_target[dataset_ids==i], 'b h w n -> (b h w) n')
-            out_seg_mask = self.classRemapper.UpsampleProtoTarget(lb[dataset_ids==i], re_proto_target, i)
+            out_seg_mask = self.classRemapper.UpsampleProtoTarget(lb[dataset_ids==i], re_proto_target[dataset_ids==i], i)
             seg_mask_mul[dataset_ids==i] = out_seg_mask
             
         return seg_mask_mul

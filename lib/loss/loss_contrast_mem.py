@@ -177,6 +177,7 @@ class PixelContrastLoss(nn.Module, ABC):
 
     def forward(self, feats, labels=None, predict=None, queue=None):
         labels = labels.unsqueeze(1).float().clone()
+        
         labels = torch.nn.functional.interpolate(labels,
                                                  (feats.shape[2], feats.shape[3]), mode='nearest')
         labels = labels.squeeze(1).long()
