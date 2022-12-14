@@ -526,6 +526,9 @@ class ClassRemapOneHotLabel(ClassRemap):
         
         # proto_target = proto_target.permute(0, 3, 1, 2)
         seg_mask = F.interpolate(proto_target.unsqueeze(1).float(), size=(H,W), mode='nearest').squeeze(1).long()
+        contrast_lb = labels[:, ::self.network_stride, ::self.network_stride]
+        contrast_lb = F.interpolate(contrast_lb.unsqueeze(1).float(), size=(H,W), mode='nearest').squeeze(1).long()
+        
         # seg_mask = seg_mask.permute(0, 2, 3, 1)
 
         
@@ -542,8 +545,8 @@ class ClassRemapOneHotLabel(ClassRemap):
                 #     print(dataset_id)
                 #     print(seg_vector)
             else:
-
-                seg_mask[labels==int(k)] = self.ignore_index
+                ## 仅替换没有参与聚类的部分
+                seg_mask[(labels==int(k)) * (contrast_lb!=int(k))] = self.ignore_index
 
         seg_mask[labels==self.ignore_index] = self.ignore_index
         # seg_mask[seg_mask==self.ignore_index] = 0

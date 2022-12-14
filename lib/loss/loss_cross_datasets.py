@@ -1,3 +1,6 @@
+
+import sys
+sys.path.insert(0, '.')
 from cmath import inf
 from distutils.command.config import config
 from traceback import print_tb
@@ -268,7 +271,7 @@ class CrossDatasetsLoss(nn.Module):
             
             cluster_mask[dataset_ids==i], constraint_mask[dataset_ids==i] = self.classRemapper.KMeansRemapping(lb[dataset_ids==i], i)
         
-        out_constrain_mask =  constraint_mask[cluster_mask]
+        out_constrain_mask =  constraint_mask[cluster_mask].logical_not()
         cluster_mask = cluster_mask.contiguous().view(-1)
         
         return cluster_mask, out_constrain_mask
@@ -295,9 +298,60 @@ def test_LabelToOneHot():
     lb = torch.tensor([2, 1,2,-1])
     print(LabelToOneHot(lb, 3))
     
+    
+def test_kmeans():
+
+    
+    from tools.configer import Configer
+    configer = Configer(configs='configs/test.json')
+    tester = CrossDatasetsLoss(configer)
+    lb = torch.tensor([
+        [[0, 0, 1, 2],
+         [2, -1, 1, 0],
+         [2, 0, -1, -1],
+         [0, 2, 1, 1]],
+        [[3, 3, 2, 1],
+         [3, 3, -1, 3],
+         [1, 2, 0, 2],
+         [1, 1, 0, 3]]
+    ])
+    contrast_lb = lb[:, ::tester.network_stride, ::tester.network_stride]
+    dataset_ids  = torch.tensor([0,1])
+    memory_bank = torch.zeros(4, 2, 2, dtype=torch.float)
+    memory_bank_ptr = torch.zeros(4, dtype=torch.long)
+    emb = torch.tensor([
+        [[[0, 0], [1, 2]],
+         [[2, -1], [1, 0]]],
+        [[[3, 3], [2, 1]],
+         [[4, 3], [-1, 3]]]
+    ])
+    rearr_emb = rearrange(emb, 'b h w c -> (b h w) c')
+    
+    proto_target = tester.AdaptiveSingleSegRemapping(contrast_lb, dataset_ids)
+    print(proto_target)
+    assert not (proto_target != torch.tensor([ 0,  1, -1, -1,  0,  1,  2,  3])).any()
+    
+    memory_bank_push(configer, memory_bank, memory_bank_ptr, rearr_emb, proto_target)
+    print(memory_bank)
+    print(memory_bank_ptr)
+
+    cluster_mask, constraint_mask = tester.AdaptiveKMeansRemapping(contrast_lb, dataset_ids)
+    print(cluster_mask)
+    print(constraint_mask)
+    
+    if cluster_mask.any():
+        choice_cluster, cluster_center = KmeansProtoLearning(configer, memory_bank, rearr_emb, cluster_mask, constraint_mask)
+    
+        proto_target[cluster_mask] = choice_cluster 
+        print(choice_cluster)
+        print(cluster_center)
+        print(proto_target)
+        
+    seg_mask_mul = tester.AdaptiveUpsampleProtoTarget(lb, proto_target, dataset_ids)
+    print(seg_mask_mul)
 
 if __name__ == "__main__":
-    test_LabelToOneHot()
+    test_kmeans()
     # loss_fuc = PixelPrototypeDistanceLoss()
     # a = torch.randn(2,4,3,2)
     # print(a)
