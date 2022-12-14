@@ -6,19 +6,19 @@
     "dataset1": {
       "n_cats": 18,
       "data_reader": "CityScapes",
-      "im_root": "/home/cxh/datasets/",
+      "im_root": "/usr/home/cxh/project/datasets/cityscapes",
       "train_im_anns":"datasets/Cityscapes/train.txt",
       "val_im_anns":"datasets/Cityscapes/val.txt", 
-      "ims_per_gpu": 10,
+      "ims_per_gpu": 3,
       "eval_ims_per_gpu": 2
     },
     "dataset2": {
       "n_cats": 12, 
       "data_reader": "CamVid",
-      "im_root": "/home/cxh/datasets/CamVid",
+      "im_root": "/usr/home/cxh/project/datasets/CamVid",
       "train_im_anns":"datasets/CamVid/train.txt",
       "val_im_anns":"datasets/CamVid/test.txt", 
-      "ims_per_gpu": 2,
+      "ims_per_gpu": 1,
       "eval_ims_per_gpu": 1
     },
     "n_bn": 1,
@@ -85,7 +85,7 @@
       "aux_num": 4,
       "ignore_index": 255,
       "domain_loss_weight": 1,
-      "m": 0,
+      "m": 0.1,
       "gamma": 14
     },
     "lr": {
@@ -93,7 +93,7 @@
       "weight_decay": 5e-5,
       "warmup_iters": 0,
       "fix_param_iters": 0,
-      "max_iter": 80000
+      "max_iter": 100000
     },
     "train": {
       "scales": [0.5, 1.0, 2.0],
@@ -134,11 +134,11 @@
     "res_save_pth": "res/Mds/",
     "network": {
       "stride": 32,
-      "with_domain_adversarial": true
+      "with_domain_adversarial": false
     },
     "dataset_aux_head": {
-      "use_dataset_aux_head": false,
-      "aux_iter": 15000
+      "use_dataset_aux_head": true,
+      "aux_iter": 50000
     },
     "optim": "AdamW",
     "iter": 0

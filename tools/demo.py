@@ -21,9 +21,9 @@ np.random.seed(123)
 # args
 parse = argparse.ArgumentParser()
 
-parse.add_argument('--weight_path', type=str, default='res/Mds/model_38000.pth',)
+parse.add_argument('--weight_path', type=str, default='res/Mds/model_50000.pth',)
 parse.add_argument('--config', dest='config', type=str, default='configs/bisenetv2_eval.json',)
-parse.add_argument('--img_path', dest='img_path', type=str, default='0001TP_007380.png',)
+parse.add_argument('--img_path', dest='img_path', type=str, default='0001TP_006720.png',)
 args = parse.parse_args()
 # cfg = set_cfg_from_file(args.config)
 configer = Configer(configs=args.config)

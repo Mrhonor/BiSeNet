@@ -61,7 +61,7 @@ def is_distributed():
 def parse_args():
     parse = argparse.ArgumentParser()
     parse.add_argument('--local_rank', dest='local_rank', type=int, default=-1,)
-    parse.add_argument('--port', dest='port', type=int, default=16854,)
+    parse.add_argument('--port', dest='port', type=int, default=16852,)
     parse.add_argument('--finetune_from', type=str, default=None,)
     parse.add_argument('--config', dest='config', type=str, default='configs/bisenetv2_city_cam.json',)
     return parse.parse_args()
@@ -416,7 +416,8 @@ def train():
                     backward_loss0, loss_seg0, loss_aux0, loss_domain0 = contrast_losses[CITY_ID](city_out, lb_city, CITY_ID, True)
                     backward_loss += backward_loss0
                     loss_seg += loss_seg0
-                    loss_domain += loss_domain0
+                    if loss_domain0 != None:
+                        loss_domain += loss_domain0
                     if with_aux:
                         loss_aux = [aux+aux0 for aux, aux0 in zip(loss_aux, loss_aux0)]
                         
@@ -424,7 +425,8 @@ def train():
                     backward_loss0, loss_seg0, loss_aux0, loss_domain0 = contrast_losses[CAM_ID](cam_out, lb_cam, CAM_ID, True)
                     backward_loss += backward_loss0
                     loss_seg += loss_seg0
-                    loss_domain += loss_domain0
+                    if loss_domain0 != None:
+                        loss_domain += loss_domain0
                     if with_aux:
                         loss_aux = [aux+aux0 for aux, aux0 in zip(loss_aux, loss_aux0)]
                 # print(backward_loss0)
@@ -439,7 +441,8 @@ def train():
                     backward_loss0, loss_seg0, loss_aux0, loss_contrast0, loss_domain0 = contrast_losses[CITY_ID](city_out, lb_city, CITY_ID, False)
                     backward_loss += backward_loss0
                     loss_seg += loss_seg0
-                    loss_domain += loss_domain0
+                    if loss_domain0 != None:
+                        loss_domain += loss_domain0
                     loss_contrast += loss_contrast0
                     if with_aux:
                         loss_aux = [aux+aux0 for aux, aux0 in zip(loss_aux, loss_aux0)]
@@ -448,7 +451,8 @@ def train():
                     backward_loss0, loss_seg0, loss_aux0, loss_contrast0, loss_domain0 = contrast_losses[CAM_ID](cam_out, lb_cam, CAM_ID, False)
                     backward_loss += backward_loss0
                     loss_seg += loss_seg0
-                    loss_domain += loss_domain0
+                    if loss_domain0 != None:
+                        loss_domain += loss_domain0
                     loss_contrast += loss_contrast0
                     if with_aux:
                         loss_aux = [aux+aux0 for aux, aux0 in zip(loss_aux, loss_aux0)]

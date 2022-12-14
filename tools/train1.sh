@@ -1,3 +1,3 @@
-export CUDA_VISIBLE_DEVICES=6,7
+export CUDA_VISIBLE_DEVICES=0,1,2
 python -m torch.distributed.launch \
---nproc_per_node=2 --master_port 16854 tools/train_amp_contrast_single.py \
+--nproc_per_node=3 --master_port 16852 tools/train_amp_contrast_single.py \

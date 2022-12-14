@@ -777,7 +777,7 @@ def main():
     
     logger = logging.getLogger()
     net = model_factory[configer.get('model_name')](configer)
-    state = torch.load('res/domain/model_final.pth', map_location='cpu')
+    state = torch.load('res/Mds/model_final.pth', map_location='cpu')
     net.load_state_dict(state, strict=False)
     
     net.cuda()

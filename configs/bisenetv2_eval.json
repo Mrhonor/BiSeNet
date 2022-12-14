@@ -6,7 +6,7 @@
   "dataset1": {
     "n_cats": 18,
     "data_reader": "CityScapes",
-    "im_root": "/home/cxh/datasets/",
+    "im_root": "/usr/home/cxh/project/datasets/cityscapes",
     "train_im_anns":"datasets/Cityscapes/train.txt",
     "val_im_anns":"datasets/Cityscapes/val.txt", 
     "ims_per_gpu": 8,
@@ -16,7 +16,7 @@
   "dataset2": {
     "n_cats": 12, 
     "data_reader": "CamVid",
-    "im_root": "/home/cxh/datasets/CamVid",
+    "im_root": "/usr/home/cxh/project/datasets/CamVid",
     "train_im_anns":"datasets/CamVid/train.txt",
     "val_im_anns":"datasets/CamVid/test.txt", 
     "ims_per_gpu": 2,
@@ -61,11 +61,11 @@
     "0": 1, 
     "1": 1,
     "2": 1, 
-    "3": 0.25,
-    "4": 0.25,
+    "3": 1,
+    "4": 1,
     "5": 1,
-    "6": 0.25,
-    "7": 0.25,
+    "6": 1,
+    "7": 1,
     "8": 1,
     "9": 1,
     "10": 1,
@@ -86,7 +86,7 @@
     "aux_num": 4,
     "ignore_index": 255,
     "domain_loss_weight": 1,
-    "m": 0,
+    "m": 0.1,
     "gamma": 14
   },
   "lr": {

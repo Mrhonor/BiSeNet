@@ -14,6 +14,7 @@ class ClassRemap():
         self.softmax = nn.Softmax(dim=1)
         self.network_stride = self.configer.get('network', 'stride')
         self.Upsample = nn.Upsample(scale_factor=self.network_stride, mode='nearest')
+        self.max_iters = self.configer.get('lr', 'max_iter')
         self._unpack()
         
         
@@ -256,13 +257,15 @@ class ClassRemapOneHotLabel(ClassRemap):
                 MaxSimIndex[MaxSim < self.update_sim_thresh] = self.ignore_index
                 
                 outputIndex[targetIndex] = MaxSimIndex[targetIndex]
+                cur_iter = self.configer.get('iter')
                 for class_id in v:
                     this_classes = MaxSim[outputIndex==class_id]
                     len_this_classes = this_classes.shape[0]
                     if len_this_classes == 0:
                         continue
                     else:
-                        len_this_classes = max(int(len_this_classes * 0.25), 1)
+                        ratio = float(cur_iter) / self.max_iters
+                        len_this_classes = max(int(len_this_classes * ratio), 1)
                         
                     out_vector = torch.ones_like(this_classes) * self.ignore_index
                     
