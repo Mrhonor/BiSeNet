@@ -358,24 +358,24 @@ def train():
 
         optim.zero_grad()
         with amp.autocast(enabled=configer.get('use_fp16')):
-            if finetune and i >= fix_param_iters + aux_iter:
-                finetune = False
-                if is_distributed():
-                    net.module.switch_require_grad_state(True)
-                else:
-                    net.switch_require_grad_state(True)
+            # if finetune and i >= fix_param_iters + aux_iter:
+            #     finetune = False
+            #     if is_distributed():
+            #         net.module.switch_require_grad_state(True)
+            #     else:
+            #         net.switch_require_grad_state(True)
                 
             
-            ## 修改为多数据集模式
+            # ## 修改为多数据集模式
             
-            if train_aux:
-                train_aux = False
-                if is_distributed():
-                    net.module.set_train_dataset_aux(False)
-                else:
-                    net.set_train_dataset_aux(False)    
+            # if train_aux:
+            #     train_aux = False
+            #     if is_distributed():
+            #         net.module.set_train_dataset_aux(False)
+            #     else:
+            #         net.set_train_dataset_aux(False)    
             
-            if epoch < 0.1:
+            if epoch < 1:
                 with torch.no_grad():
                     out = net(im)
             else:
@@ -413,10 +413,9 @@ def train():
                 is_warmup = False
                 
 
-            if epoch < 0.1:
+            if epoch < 1:
                 contrast_losses(adaptive_out, lb, dataset_lbs, is_warmup, init_memory_bank=True)
-                torch.cuda.synchronize()
-                torch.cuda.empty_cache()
+                # torch.cuda.synchronize()
                 continue
             else:
                 backward_loss, loss_seg, loss_aux, loss_contrast, loss_domain, new_proto = contrast_losses(adaptive_out, lb, dataset_lbs, is_warmup)
@@ -437,6 +436,7 @@ def train():
         # print('before backward')
         # set_trace()
         # with torch.autograd.detect_anomaly():
+        # print(backward_loss)
         scaler.scale(backward_loss).backward()
         # print('after backward')
 
@@ -528,21 +528,22 @@ def train():
 
 def main():
 
-    # local_rank = int(os.environ["LOCAL_RANK"])
-    torch.cuda.set_device(args.local_rank)
+    local_rank = int(os.environ["LOCAL_RANK"])
+    # torch.cuda.set_device(args.local_rank)
     # dist.init_process_group(
     #     backend='nccl',
     #     init_method='tcp://127.0.0.1:{}'.format(args.port),
     #     world_size=torch.cuda.device_count(),
     #     rank=args.local_rank
     # )
-    # torch.cuda.set_device(local_rank)
-    # dist.init_process_group(
-    #     backend='nccl',
-    #     init_method='tcp://127.0.0.1:{}'.format(args.port),
-    #     world_size=torch.cuda.device_count(),
-    #     rank=local_rank
-    # )
+    # print(local_rank)
+    torch.cuda.set_device(local_rank)
+    dist.init_process_group(
+        backend='nccl',
+        init_method='tcp://127.0.0.1:{}'.format(args.port),
+        world_size=torch.cuda.device_count(),
+        rank=local_rank
+    )
     
     if not osp.exists(configer.get('res_save_pth')): os.makedirs(configer.get('res_save_pth'))
 

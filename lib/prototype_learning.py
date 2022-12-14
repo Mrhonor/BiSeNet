@@ -90,8 +90,10 @@ def KmeansProtoLearning(configer, memory_bank, _c, cluster_seg, gt_seg):
     target_device = 'cpu'
     if memory_bank.is_cuda:
         target_device = 'cuda'
-        
+
     choice_cluster, initial_state = kmeans(_c[cluster_seg], num_unify_classes, cluster_centers=cluster_centers, distance='cosine', device=target_device, memory_bank=memory_bank, constraint_matrix=gt_seg)
+
+        
     return choice_cluster, initial_state
     
     

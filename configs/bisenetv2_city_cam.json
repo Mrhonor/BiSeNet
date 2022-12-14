@@ -9,7 +9,7 @@
       "im_root": "/home/cxh/datasets/",
       "train_im_anns":"datasets/Cityscapes/train.txt",
       "val_im_anns":"datasets/Cityscapes/val.txt", 
-      "ims_per_gpu": 6,
+      "ims_per_gpu": 12,
       "eval_ims_per_gpu": 2
     },
     "dataset2": {
@@ -18,7 +18,7 @@
       "im_root": "/home/cxh/datasets/CamVid",
       "train_im_anns":"datasets/CamVid/train.txt",
       "val_im_anns":"datasets/CamVid/test.txt", 
-      "ims_per_gpu": 2,
+      "ims_per_gpu": 4,
       "eval_ims_per_gpu": 2
     },
     "n_bn": 2,

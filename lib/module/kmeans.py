@@ -80,6 +80,7 @@ def kmeans(
         initial_state = cluster_centers
         dis = pairwise_distance_function(X, initial_state)
         choice_points = torch.argmin(dis, dim=0)
+
         initial_state = X[choice_points]
         # initial_state = initial_state.to(device)
 
@@ -194,7 +195,7 @@ def pairwise_distance(data1, data2, device='cpu', tqdm_flag=True):
 
     dis = (A - B) ** 2.0
     # return N*N matrix for pairwise distance
-    dis = dis.sum(dim=-1).squeeze()
+    dis = dis.sum(dim=-1) #.squeeze()
     return dis
 
 
@@ -214,9 +215,9 @@ def pairwise_cosine(data1, data2, device='cpu'):
     B_normalized = B / B.norm(dim=-1, keepdim=True)
 
     cosine = A_normalized * B_normalized
-
+    
     # return N*N matrix for pairwise distance
-    cosine_dis = 1 - cosine.sum(dim=-1).squeeze()
+    cosine_dis = 1 - cosine.sum(dim=-1) #.squeeze()
     return cosine_dis
 
 
@@ -246,3 +247,9 @@ def pairwise_soft_dtw(data1, data2, sdtw=None, device='cpu'):
     # (batch_size, cluster_size)
     dis = torch.cat(distances, dim=1)
     return dis
+
+
+if __name__ == '__main__':
+    a = torch.randn(2,5)
+    b = torch.randn(3,5)
+    print(pairwise_cosine(a, b).shape)

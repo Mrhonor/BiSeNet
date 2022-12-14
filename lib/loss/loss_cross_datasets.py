@@ -43,14 +43,14 @@ class CrossDatasetsLoss(nn.Module):
         ## 处理多标签
         # self.seg_criterion_mul = eval(self.configer.get('loss', 'type'))(configer=self.configer)   
         # 处理单标签
-        self.seg_criterion_sig = OhemCELoss(0.7, ignore_lb=self.loss_weight)
+        self.seg_criterion_sig = OhemCELoss(0.7, ignore_lb=self.ignore_index)
             
         self.with_aux = self.configer.get('loss', 'with_aux')
         if self.with_aux:
             self.aux_num = self.configer.get('loss', 'aux_num')
             self.aux_weight = self.configer.get('loss', 'aux_weight')
             # self.segLoss_aux_Mul = [eval(self.configer.get('loss', 'type'))(configer=self.configer) for _ in range(self.aux_num)]
-            self.segLoss_aux_Sig = [OhemCELoss(0.7, ignore_lb=self.loss_weight) for _ in range(self.aux_num)]
+            self.segLoss_aux_Sig = [OhemCELoss(0.7, ignore_lb=self.ignore_index) for _ in range(self.aux_num)]
         
         self.use_contrast = self.configer.get('contrast', 'use_contrast')
         if self.use_contrast:
@@ -108,21 +108,24 @@ class CrossDatasetsLoss(nn.Module):
         
         new_proto = None
         if self.use_contrast:
-            rearr_emb = rearrange(embedding, 'b c h w -> (b h w) c')
-            proto_mask = self.AdaptiveSingleSegRemapping(contrast_lb, dataset_ids)
+            rearr_emb = rearrange(embedding, 'b c h w -> (b h w) c').detach()
+            proto_target = self.AdaptiveSingleSegRemapping(contrast_lb, dataset_ids)
 
-            memory_bank_push(self.configer, memory_bank, memory_bank_ptr, rearr_emb, proto_mask)
+            
+            memory_bank_push(self.configer, memory_bank, memory_bank_ptr, rearr_emb, proto_target)
             if init_memory_bank == False:
-                proto_logits = torch.mm(rearr_emb, memory_bank.view(-1, memory_bank.shape[-1]).t())
+                # proto_logits = torch.mm(rearr_emb, memory_bank.view(-1, memory_bank.shape[-1]).t())
                 
                 cluster_mask, constraint_mask = self.AdaptiveKMeansRemapping(contrast_lb, dataset_ids)
                 ## n: num of class; k: num of prototype per class
                 ## proto_logits: (b h_c w_c) * (nk) 每个通道输出分别与prototype的内积
                 ## proto_target: 每个通道输出所分配到的prototype的index
-                choice_cluster, initial_state = KmeansProtoLearning(self.configer, memory_bank, rearr_emb, cluster_mask, constraint_mask)
                 
-                proto_mask[cluster_mask] = choice_cluster
-                proto_target = proto_mask         
+                
+                if cluster_mask.any():
+                    choice_cluster, _ = KmeansProtoLearning(self.configer, memory_bank, rearr_emb, cluster_mask, constraint_mask)
+                
+                    proto_target[cluster_mask] = choice_cluster       
                 # proto_targetOntHot = LabelToOneHot(proto_target, self.num_unify_classes)
                 # proto_targetOntHot = rearrange(proto_targetOntHot, '(b h w) n -> b h w n', b=contrast_lb.shape[0], h=contrast_lb.shape[1], w=contrast_lb.shape[2])
             else:
@@ -148,7 +151,6 @@ class CrossDatasetsLoss(nn.Module):
                 loss_aux = [aux_criterion_mul(aux, seg_label_mul) for aux, aux_criterion_mul in zip(pred_aux, self.segLoss_aux_Mul)]
                 # loss_aux = [aux_criterion_mul(aux, seg_label_mul+ seg_label_sig) for aux, aux_criterion_mul, aux_criterion_sig in zip(pred_aux, self.segLoss_aux_Mul, self.segLoss_aux_Sig)]
                 
-
                 loss = loss + self.aux_weight * sum(loss_aux)
                 
             
@@ -157,10 +159,14 @@ class CrossDatasetsLoss(nn.Module):
 
             seg_mask_mul = self.AdaptiveUpsampleProtoTarget(lb, proto_target, dataset_ids)
             segment_queue = torch.mean(memory_bank, dim=1)
-            predict = torch.argmin(logits, dim=1)
-            predict = predict[:, ::self.network_stride, ::self.network_stride]
+            # predict = torch.argmin(logits, dim=1).detach()
+            # predict = predict[:, ::self.network_stride, ::self.network_stride]
+            pred = F.interpolate(input=logits, size=embedding.shape[-2:], mode='bilinear', align_corners=True)
+
+            _, predict = torch.max(pred, 1)
+            
             re_proto_target = rearrange(proto_target, '(b h w) -> b h w', b=lb.shape[0], h=int(lb.shape[1]/self.network_stride), w=int(lb.shape[2]/self.network_stride))
-            loss_contrast = self.contrast_criterion(embedding, re_proto_target, predict, segment_queue)
+            loss_contrast = self.contrast_criterion(embedding, re_proto_target, predict, queue=segment_queue)
             
             # loss_contrast = self.hard_lb_contrast_loss(proto_logits, contrast_mask_label+proto_targetOntHot)
             
@@ -181,7 +187,7 @@ class CrossDatasetsLoss(nn.Module):
             #     loss_ppd = self.ppd_criterion(embedding, contrast_mask_label, segment_queue)
             #     loss_contrast = loss_contrast + self.ppd_loss_weight * loss_ppd
                 
-            loss += self.loss_weight * loss_contrast
+            loss = loss + self.loss_weight * loss_contrast
             
             
 

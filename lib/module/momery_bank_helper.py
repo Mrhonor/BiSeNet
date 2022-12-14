@@ -29,3 +29,40 @@ def memory_bank_push(configer, memory_bank, memory_bank_ptr, _c, gt_seg):
             else:
                 memory_bank[i, ptr:ptr + K, :] = feat
                 memory_bank_ptr[i] = (memory_bank_ptr[i] + K) % num_prototype
+                
+if __name__ == '__main__':
+    from tools.configer import Configer
+    configer = Configer(configs='configs/test_kmeans.json')
+    
+    memory_bank = torch.zeros(3, 5, 2)
+    memory_bank_ptr = torch.zeros(3)
+    # _c = torch.tensor([[[1,1],
+    #                     [2,2]],
+    #                     [[-1,1],
+    #                     [-2,1]],
+    #                     [[0,-1],
+    #                     [1,-2]]], dtype=torch.float, requires_grad=True)
+    # memory_bank = torch.tensor([[[1,1],
+    #                              [2,2]],
+    #                             [[-1,1],
+    #                              [-2,1]],
+    #                             [[0,-1],
+    #                              [1,-2]]], dtype=torch.float)
+    # memory_bank_ptr = torch.tensor([0,0,0])
+    _c = torch.tensor([[0,0],
+                       [1,2],
+                       [-1,2],
+                       [-1,-2],
+                       [1,1],
+                       [1,1]], dtype=torch.float, requires_grad=True)
+    # cluster_seg = torch.ones(6, dtype=torch.bool)
+    # gt_seg = torch.tensor([[1,1,1],
+    #                         [1,1,1],
+    #                         [1,1,1],
+    #                         [1,1,1],
+    #                         [0,1,1],
+    #                         [1,0,1]], dtype=torch.bool).logical_not()
+    gt_seg = torch.tensor([-1, 0, 2, 1, -1, 1])
+    memory_bank_push(configer, memory_bank, memory_bank_ptr, _c.detach(), gt_seg)
+    print(memory_bank)
+    print(memory_bank_ptr)

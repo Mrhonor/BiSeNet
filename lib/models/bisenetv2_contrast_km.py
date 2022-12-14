@@ -487,13 +487,10 @@ class BiSeNetV2_Contrast_KM(nn.Module):
             self.aux4 = SegmentHead(64, 128, self.num_unify_classes, up_factor=16, aux=True, n_bn=self.n_bn)
             self.aux5_4 = SegmentHead(128, 128, self.num_unify_classes, up_factor=32, aux=True, n_bn=self.n_bn)
 
-            
+        self.register_buffer("memory_bank", torch.randn(self.num_unify_classes, self.num_prototype, self.proj_dim))
+        self.memory_bank = nn.functional.normalize(self.memory_bank, p=2, dim=2)
+        self.register_buffer("memory_bank_ptr", torch.zeros(self.num_unify_classes, dtype=torch.long))
 
-        self.init_memory_bank = True    
-        self.memory_bank = nn.Parameter(torch.zeros(self.num_unify_classes, self.num_prototype, self.proj_dim),
-                                       requires_grad=False)
-        # self.prototypes = self.memory_bank
-        self.memory_bank_ptr = torch.zeros(self.num_unify_classes)
         # trunc_normal_(self.prototypes, std=0.02)
         self.init_weights()
 

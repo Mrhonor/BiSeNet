@@ -528,9 +528,6 @@ class ClassRemapOneHotLabel(ClassRemap):
         seg_mask = F.interpolate(proto_target.unsqueeze(1).float(), size=(H,W), mode='nearest').squeeze(1).long()
         # seg_mask = seg_mask.permute(0, 2, 3, 1)
 
-        zero_vector = torch.zeros(self.num_unify_classes, dtype=torch.bool)
-        if seg_mask.is_cuda:
-            zero_vector = zero_vector.cuda()
         
         for k, v in self.remapList[dataset_id].items():
             # 判断是否为空
