@@ -6,22 +6,22 @@
     "dataset1": {
       "n_cats": 18,
       "data_reader": "CityScapes",
-      "im_root": "/home/cxh/datasets/",
+      "im_root": "/data2/datasets/",
       "train_im_anns":"datasets/Cityscapes/train.txt",
       "val_im_anns":"datasets/Cityscapes/val.txt", 
-      "ims_per_gpu": 12,
+      "ims_per_gpu": 8,
       "eval_ims_per_gpu": 2
     },
     "dataset2": {
       "n_cats": 12, 
       "data_reader": "CamVid",
-      "im_root": "/home/cxh/datasets/CamVid",
+      "im_root": "/data2/datasets/CamVid",
       "train_im_anns":"datasets/CamVid/train.txt",
       "val_im_anns":"datasets/CamVid/test.txt", 
       "ims_per_gpu": 4,
       "eval_ims_per_gpu": 2
     },
-    "n_bn": 2,
+    "n_bn": 1,
     "class_remap1":{
       "0": [0], 
       "1": [1],
@@ -93,27 +93,27 @@
       "weight_decay": 5e-5,
       "warmup_iters": 0,
       "fix_param_iters": 0,
-      "max_iter": 30000
+      "max_iter": 80000
     },
     "train": {
       "scales": [0.5, 1.0, 2.0],
       "cropsize": [512, 1024],
       "finetune": false,
-      "finetune_from": "res/Mds/model_27000.pth"
+      "finetune_from": "res/Mds/model_14000.pth"
     },
     "val": {
       "scales": [0.5, 0.75, 1.0, 1.25, 1.5, 1.75],
       "cropsize": [512, 1024]
     },
     "use_fp16": false,
-    "use_sync_bn": false,
+    "use_sync_bn": true,
     "contrast": {
       "use_contrast": true,
       "proj_dim": 256,
       "temperature": 0.07,
       "base_temperature": 0.07,
       "max_samples": 4096,
-      "max_views": 24,
+      "max_views": 128,
       "loss_weight": 1,
       "num_prototype": 500,
       "coefficient": 0.99,

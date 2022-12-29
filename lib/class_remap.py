@@ -2,6 +2,14 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+def LabelToOneHot(LabelVector, nClass, ignore_index=-1):
+
+    OutOneHot = torch.zeros(*(LabelVector.shape), nClass, dtype=torch.bool)
+    if LabelVector.is_cuda:
+        OutOneHot = OutOneHot.cuda()
+        
+    OutOneHot[LabelVector!=ignore_index, LabelVector[LabelVector!=ignore_index]]=1
+    return OutOneHot
 
 class ClassRemap():
     def __init__(self, configer=None):
@@ -529,9 +537,14 @@ class ClassRemapOneHotLabel(ClassRemap):
         contrast_lb = labels[:, ::self.network_stride, ::self.network_stride]
         contrast_lb = F.interpolate(contrast_lb.unsqueeze(1).float(), size=(H,W), mode='nearest').squeeze(1).long()
         
+        seg_mask = LabelToOneHot(seg_mask, self.num_unify_classes, self.ignore_index)
+        
         # seg_mask = seg_mask.permute(0, 2, 3, 1)
 
-        
+        zero_vector = torch.zeros(self.num_unify_classes, dtype=torch.bool)
+        if labels.is_cuda:
+            zero_vector = zero_vector.cuda()
+            
         for k, v in self.remapList[dataset_id].items():
             # 判断是否为空
             if not (labels==int(k)).any():
@@ -539,16 +552,27 @@ class ClassRemapOneHotLabel(ClassRemap):
             
             
             if len(v) == 1: 
-                seg_mask[labels==int(k)] = v[0]
+                seg_vector = torch.zeros(self.num_unify_classes, dtype=torch.bool)
+                if seg_mask.is_cuda:
+                    seg_vector = seg_vector.cuda()
+                    
+                seg_vector[v[0]] = True
+                seg_mask[labels==int(k)] = seg_vector
                 
                 # if int(k) == 3:
                 #     print(dataset_id)
                 #     print(seg_vector)
             else:
-                ## 仅替换没有参与聚类的部分
-                seg_mask[(labels==int(k)) * (contrast_lb!=int(k))] = self.ignore_index
+                expend_vector = torch.zeros(self.num_unify_classes, dtype=torch.bool)
+                if labels.is_cuda:
+                    expend_vector = expend_vector.cuda()
 
-        seg_mask[labels==self.ignore_index] = self.ignore_index
+                expend_vector[v] = True
+                
+                ## 仅替换没有参与聚类的部分
+                seg_mask[(labels==int(k)) * (contrast_lb!=int(k))] = expend_vector
+
+        seg_mask[labels==self.ignore_index] = zero_vector
         # seg_mask[seg_mask==self.ignore_index] = 0
         
         # if is_emb_upsampled:

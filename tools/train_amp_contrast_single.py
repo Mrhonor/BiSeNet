@@ -399,10 +399,10 @@ def train():
                     adaptive_out[k] = v[0]
 
             if is_distributed():
-                adaptive_out['memory_bank'] = [net.module.memory_bank, net.module.memory_bank_ptr]
+                adaptive_out['memory_bank'] = [net.module.memory_bank, net.module.memory_bank_ptr, net.module.prototypes]
             
             else:
-                adaptive_out['memory_bank'] = [net.memory_bank, net.memory_bank_ptr]
+                adaptive_out['memory_bank'] = [net.memory_bank, net.memory_bank_ptr, net.prototypes]
                 
                 
 
@@ -415,15 +415,19 @@ def train():
 
             if epoch < 1:
                 contrast_losses(adaptive_out, lb, dataset_lbs, is_warmup, init_memory_bank=True)
+                if is_distributed():
+                    net.module.PrototypesUpdate(None)
+                else:
+                    net.PrototypesUpdate(None)        
                 # torch.cuda.synchronize()
                 continue
             else:
                 backward_loss, loss_seg, loss_aux, loss_contrast, loss_domain, new_proto = contrast_losses(adaptive_out, lb, dataset_lbs, is_warmup)
 
-        # if is_distributed():
-        #     net.module.PrototypesUpdate(new_proto)
-        # else:
-        #     net.PrototypesUpdate(new_proto)        
+        if is_distributed():
+            net.module.PrototypesUpdate(new_proto)
+        else:
+            net.PrototypesUpdate(new_proto)        
         
             
         # if with_memory and 'key' in out:

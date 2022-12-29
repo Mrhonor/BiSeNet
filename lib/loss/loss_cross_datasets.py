@@ -18,9 +18,8 @@ from einops import rearrange, repeat
 
 
 def LabelToOneHot(LabelVector, nClass, ignore_index=-1):
-    
-    ## 输入的label应该是一维tensor向量
-    OutOneHot = torch.zeros(len(LabelVector), nClass, dtype=torch.bool)
+
+    OutOneHot = torch.zeros(*(LabelVector.shape), nClass, dtype=torch.bool)
     if LabelVector.is_cuda:
         OutOneHot = OutOneHot.cuda()
         
@@ -44,16 +43,16 @@ class CrossDatasetsLoss(nn.Module):
             
         
         ## 处理多标签
-        # self.seg_criterion_mul = eval(self.configer.get('loss', 'type'))(configer=self.configer)   
+        self.seg_criterion_mul = eval(self.configer.get('loss', 'type'))(configer=self.configer)   
         # 处理单标签
-        self.seg_criterion_sig = OhemCELoss(0.7, ignore_lb=self.ignore_index)
+        # self.seg_criterion_sig = OhemCELoss(0.7, ignore_lb=self.ignore_index)
             
         self.with_aux = self.configer.get('loss', 'with_aux')
         if self.with_aux:
             self.aux_num = self.configer.get('loss', 'aux_num')
             self.aux_weight = self.configer.get('loss', 'aux_weight')
-            # self.segLoss_aux_Mul = [eval(self.configer.get('loss', 'type'))(configer=self.configer) for _ in range(self.aux_num)]
-            self.segLoss_aux_Sig = [OhemCELoss(0.7, ignore_lb=self.ignore_index) for _ in range(self.aux_num)]
+            self.segLoss_aux_Mul = [eval(self.configer.get('loss', 'type'))(configer=self.configer) for _ in range(self.aux_num)]
+            # self.segLoss_aux_Sig = [OhemCELoss(0.7, ignore_lb=self.ignore_index) for _ in range(self.aux_num)]
         
         self.use_contrast = self.configer.get('contrast', 'use_contrast')
         if self.use_contrast:
@@ -103,9 +102,9 @@ class CrossDatasetsLoss(nn.Module):
  
 
         if "memory_bank" in preds:
-            memory_bank, memory_bank_ptr = preds['memory_bank']
+            memory_bank, memory_bank_ptr, prototypes = preds['memory_bank']
         else:
-            memory_bank, memory_bank_ptr = None, None
+            memory_bank, memory_bank_ptr, prototypes = None, None
 
         contrast_lb = lb[:, ::self.network_stride, ::self.network_stride]
         
@@ -161,19 +160,19 @@ class CrossDatasetsLoss(nn.Module):
         else:
 
             seg_mask_mul = self.AdaptiveUpsampleProtoTarget(lb, proto_target, dataset_ids)
-            segment_queue = torch.mean(memory_bank, dim=1)
+            # segment_queue = torch.mean(memory_bank, dim=1)
             # predict = torch.argmin(logits, dim=1).detach()
             # predict = predict[:, ::self.network_stride, ::self.network_stride]
-            pred = F.interpolate(input=logits, size=embedding.shape[-2:], mode='bilinear', align_corners=True)
+            pred = F.interpolate(input=logits, size=embedding.shape[-2:], mode='bilinear', align_corners=True).detach()
 
             _, predict = torch.max(pred, 1)
             
             re_proto_target = rearrange(proto_target, '(b h w) -> b h w', b=lb.shape[0], h=int(lb.shape[1]/self.network_stride), w=int(lb.shape[2]/self.network_stride))
-            loss_contrast = self.contrast_criterion(embedding, re_proto_target, predict, queue=segment_queue)
+            loss_contrast = self.contrast_criterion(embedding, re_proto_target, predict, queue=prototypes)
             
             # loss_contrast = self.hard_lb_contrast_loss(proto_logits, contrast_mask_label+proto_targetOntHot)
             
-            loss_seg_mul = self.seg_criterion_sig(logits, seg_mask_mul)
+            loss_seg_mul = self.seg_criterion_mul(logits, seg_mask_mul)
             loss_seg = loss_seg_mul 
             loss = loss_seg
 
@@ -182,7 +181,7 @@ class CrossDatasetsLoss(nn.Module):
                 # aux_weight_mask = self.classRemapper.GetEqWeightMask(lb, dataset_id)
                 pred_aux = [F.interpolate(input=logit, size=(h, w), mode='bilinear', align_corners=True) for logit in logits_aux]
                 # loss_aux = [aux_criterion_sig(aux[0], seg_mask_sig) + aux_criterion_mul(aux[1], seg_mask_mul) for aux, aux_criterion_mul, aux_criterion_sig in zip(pred_aux, self.segLoss_aux_Mul, self.segLoss_aux_Sig)]
-                loss_aux = [aux_criterion_sig(aux, seg_mask_mul) for aux, aux_criterion_sig in zip(pred_aux, self.segLoss_aux_Sig)]
+                loss_aux = [aux_criterion_mul(aux, seg_mask_mul) for aux, aux_criterion_mul in zip(pred_aux, self.segLoss_aux_Mul)]
                 
                 loss = loss + self.aux_weight * sum(loss_aux)
                 
@@ -278,7 +277,7 @@ class CrossDatasetsLoss(nn.Module):
     
     def AdaptiveUpsampleProtoTarget(self, lb, proto_target, dataset_ids):
         # b, h, w = lb.shape
-        seg_mask_mul = torch.ones_like(lb) * self.ignore_index
+        seg_mask_mul = torch.zeros(*(lb.shape), self.num_unify_classes, dtype=torch.bool)
         
         if lb.is_cuda:
             seg_mask_mul = seg_mask_mul.cuda()

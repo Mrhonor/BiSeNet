@@ -1,5 +1,5 @@
 {
-  "model_name": "bisenetv2_contrast",
+  "model_name": "bisenetv2_contrast_km",
   "aux_mode": "pred",
   "n_datasets": 2,
   "num_unify_classes": 19,
@@ -22,7 +22,7 @@
     "ims_per_gpu": 1,
     "eval_ims_per_gpu": 1
   },
-  "n_bn": 2,
+  "n_bn": 1,
   "class_remap1":{
     "0": [0], 
     "1": [1],
@@ -109,7 +109,7 @@
   "use_fp16": false,
   "use_sync_bn": false,
   "contrast": {
-    "use_contrast": true,
+    "use_contrast": false,
     "proj_dim": 256,
     "temperature": 0.07,
     "base_temperature": 0.07,
@@ -117,7 +117,7 @@
     "max_views": 50,
     "stride": 16,
     "loss_weight": 1,
-    "num_prototype": 3,
+    "num_prototype": 5000,
     "with_memory": true,
     "memory_size": 5000,
     "pixel_update_freq": 10,
@@ -134,7 +134,7 @@
   "res_save_pth": "res/Mds/",
   "network": {
     "stride": 32,
-    "with_domain_adversarial": false
+    "with_domain_adversarial": true
   },
   "dataset_aux_head": {
     "use_dataset_aux_head": false,

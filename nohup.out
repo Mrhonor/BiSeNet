@@ -462,3 +462,41 @@ Root Cause (first observed failure):
   error_file: <N/A>
   traceback : Signal 15 (SIGTERM) received by PID 47553
 =======================================================
+[W 2022-12-15 10:59:34.918 LabApp] 'ip' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-12-15 10:59:34.918 LabApp] 'password' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-12-15 10:59:34.918 LabApp] 'password' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-12-15 10:59:34.918 LabApp] 'port' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2022-12-15 10:59:34.918 LabApp] 'allow_remote_access' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[I 2022-12-15 10:59:34.929 ServerApp] jupyterlab | extension was successfully linked.
+[I 2022-12-15 10:59:34.943 ServerApp] nbclassic | extension was successfully linked.
+[I 2022-12-15 10:59:35.469 ServerApp] notebook_shim | extension was successfully linked.
+[W 2022-12-15 10:59:35.550 ServerApp] WARNING: The Jupyter server is listening on all IP addresses and not using encryption. This is not recommended.
+[I 2022-12-15 10:59:35.552 ServerApp] notebook_shim | extension was successfully loaded.
+[I 2022-12-15 10:59:35.553 LabApp] JupyterLab extension loaded from /home/cxh/anaconda3/envs/bisenet/lib/python3.8/site-packages/jupyterlab
+[I 2022-12-15 10:59:35.553 LabApp] JupyterLab application directory is /home/cxh/anaconda3/envs/bisenet/share/jupyter/lab
+[I 2022-12-15 10:59:35.557 ServerApp] jupyterlab | extension was successfully loaded.
+[I 2022-12-15 10:59:35.566 ServerApp] nbclassic | extension was successfully loaded.
+[I 2022-12-15 10:59:35.567 ServerApp] Serving notebooks from local directory: /home/cxh/mr/BiSeNet
+[I 2022-12-15 10:59:35.567 ServerApp] Jupyter Server 1.18.1 is running at:
+[I 2022-12-15 10:59:35.567 ServerApp] http://localhost:14923/lab
+[I 2022-12-15 10:59:35.567 ServerApp]  or http://127.0.0.1:14923/lab
+[I 2022-12-15 10:59:35.567 ServerApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[I 2022-12-15 11:00:06.482 ServerApp] 302 GET / (::1) 1.31ms
+[W 2022-12-15 11:00:06.492 ServerApp] Clearing invalid/expired login cookie username-localhost-8888
+[W 2022-12-15 11:00:06.494 LabApp] Clearing invalid/expired login cookie username-localhost-8888
+[I 2022-12-15 11:00:06.495 LabApp] 302 GET /lab? (::1) 4.07ms
+[I 2022-12-15 11:00:12.955 ServerApp] 302 POST /login?next=%2Flab%3F (::1) 69.56ms
+[W 2022-12-15 11:00:15.618 LabApp] Could not determine jupyterlab build status without nodejs
+[I 2022-12-15 11:00:16.161 ServerApp] New terminal with automatic name: 2
+[I 2022-12-15 18:14:56.823 ServerApp] 302 GET / (::1) 1.50ms
+[W 2022-12-15 18:14:58.553 LabApp] Could not determine jupyterlab build status without nodejs
+[I 2022-12-16 15:41:25.906 ServerApp] 302 GET / (::1) 1.47ms
+[W 2022-12-16 15:41:27.930 LabApp] Could not determine jupyterlab build status without nodejs
+[I 2022-12-18 10:51:59.957 ServerApp] 302 GET / (::1) 5.94ms
+[W 2022-12-18 10:52:01.866 LabApp] Could not determine jupyterlab build status without nodejs
+[I 2022-12-19 10:32:48.045 ServerApp] 302 GET / (::1) 2.21ms
+[W 2022-12-19 10:32:49.817 LabApp] Could not determine jupyterlab build status without nodejs
+[I 2022-12-23 14:51:21.788 ServerApp] 302 GET / (::1) 2.21ms
+[W 2022-12-23 14:51:23.386 LabApp] Could not determine jupyterlab build status without nodejs
+[I 2022-12-29 19:39:45.372 ServerApp] 302 GET / (::1) 2.18ms
+[W 2022-12-29 19:39:46.958 LabApp] Could not determine jupyterlab build status without nodejs

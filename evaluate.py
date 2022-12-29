@@ -128,13 +128,13 @@ class MscEvalV0_Contrast(object):
 
                 im_sc = im_sc.cuda()
                 
-                logits = net(im_sc, dataset=dataset_id)
+                logits = net(im_sc)
                 logits = F.interpolate(logits, size=size,
                         mode='bilinear', align_corners=True)
                 probs += torch.softmax(logits, dim=1)
                 if self.flip:
                     im_sc = torch.flip(im_sc, dims=(3, ))
-                    logits = net(im_sc, dataset=dataset_id)
+                    logits = net(im_sc)
                     logits = torch.flip(logits, dims=(3, ))
                     logits = F.interpolate(logits, size=size,
                             mode='bilinear', align_corners=True)

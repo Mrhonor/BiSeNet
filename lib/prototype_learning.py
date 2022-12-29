@@ -91,9 +91,21 @@ def KmeansProtoLearning(configer, memory_bank, _c, cluster_seg, gt_seg):
     if memory_bank.is_cuda:
         target_device = 'cuda'
 
-    choice_cluster, initial_state = kmeans(_c[cluster_seg], num_unify_classes, cluster_centers=cluster_centers, distance='cosine', device=target_device, memory_bank=memory_bank, constraint_matrix=gt_seg)
-
+    # choice_cluster, initial_state = kmeans(_c[cluster_seg], num_unify_classes, cluster_centers=cluster_centers, distance='cosine', device=target_device, memory_bank=memory_bank, constraint_matrix=gt_seg)
+    
+    memorys = rearrange(memory_bank, 'b n d -> (b n) d')
+    x = torch.cat((_c[cluster_seg], memorys), dim=0)
+    
+    extend_mat = torch.zeros(num_unify_classes*num_prototype, num_unify_classes, dtype=torch.bool)
+    if gt_seg.is_cuda:
+        extend_mat = extend_mat.cuda()
         
+    ext_gt_seg = torch.cat((gt_seg, extend_mat), dim=0)
+    choice_cluster, initial_state = kmeans(x, num_unify_classes, cluster_centers=cluster_centers, distance='cosine', device=target_device, constraint_matrix=ext_gt_seg)
+    ori_num = _c[cluster_seg].shape[0]
+    choice_cluster = choice_cluster[:ori_num]
+    
+    
     return choice_cluster, initial_state
     
     

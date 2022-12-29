@@ -104,7 +104,8 @@ def kmeans(
                 selected = selected.cuda()
 
             selected = torch.index_select(X, 0, selected)
-            selected = torch.cat((selected, memory_bank[index]), dim=0)
+            if memory_bank != None:
+                selected = torch.cat((selected, memory_bank[index]), dim=0)
 
             # https://github.com/subhadarship/kmeans_pytorch/issues/16
             if selected.shape[0] == 0:

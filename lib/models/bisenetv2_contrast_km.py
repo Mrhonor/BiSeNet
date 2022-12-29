@@ -491,7 +491,11 @@ class BiSeNetV2_Contrast_KM(nn.Module):
         self.memory_bank = nn.functional.normalize(self.memory_bank, p=2, dim=2)
         self.register_buffer("memory_bank_ptr", torch.zeros(self.num_unify_classes, dtype=torch.long))
 
-        # trunc_normal_(self.prototypes, std=0.02)
+        self.prototypes = nn.Parameter(torch.zeros(self.num_unify_classes, self.proj_dim),
+                                requires_grad=False)
+
+        trunc_normal_(self.prototypes, std=0.02)
+
         self.init_weights()
 
     def forward(self, x, *other_x, dataset=0, perm_index=None):
@@ -784,7 +788,10 @@ class BiSeNetV2_Contrast_KM(nn.Module):
             p.requires_grad = require_grad_state
         
     def PrototypesUpdate(self, new_proto):
-        self.prototypes = nn.Parameter(F.normalize(new_proto, p=2, dim=-1),
+        new_proto_mean = torch.mean(self.memory_bank, dim=1)
+        new_proto_mean = F.normalize(new_proto_mean, p=2, dim=-1)
+        
+        self.prototypes = nn.Parameter(F.normalize(new_proto_mean * (1-self.coefficient) + self.prototypes * self.coefficient, p=2, dim=-1),
                                         requires_grad=False)
 
         # if dist.is_available() and dist.is_initialized():
