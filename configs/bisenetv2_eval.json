@@ -117,7 +117,7 @@
     "max_views": 50,
     "stride": 16,
     "loss_weight": 1,
-    "num_prototype": 5000,
+    "num_prototype": 500,
     "with_memory": true,
     "memory_size": 5000,
     "pixel_update_freq": 10,
